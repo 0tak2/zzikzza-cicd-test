@@ -6,7 +6,7 @@ on:
 
 jobs:
   release:
-    if: ${{ github.event.comment.body == '/start' && startsWith(github.event.issue.title, '[Release]') }}
+    if: ${{!github.event.issue.pull_request && github.event.comment.body == '/start' && startsWith(github.event.issue.title, '🎤 [Release]') }}
     runs-on: ubuntu-latest
 
     steps:
