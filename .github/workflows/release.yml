@@ -6,10 +6,13 @@ on:
 
 jobs:
   release:
-    if: | # PR이 아니고, 제목이 지정된 형식이면서, 코멘트가 '/start'로 시작할 때 실행
+    # 1. PR이 아니고, 제목이 지정된 형식이며, 코멘트가 '/start'로 시작하고,
+    # 2. 작성자가 저장소 소유자(OWNER) 또는 협력자(COLLABORATOR, MEMBER)인 경우에만 실행
+    if: |
       !github.event.issue.pull_request && 
       startsWith(github.event.issue.title, '🎤 [Release]') &&
-      startsWith(github.event.comment.body, '/start')
+      startsWith(github.event.comment.body, '/start') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     
     runs-on: ubuntu-latest
     permissions:
@@ -20,31 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Parse Version and Post Comment
+      - name: Parse and Run
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          # 1. 코멘트에서 버전(두 번째 단어) 추출
-          # 예: "/start v1.2.3" -> "v1.2.3"
           VERSION=$(echo "$COMMENT_BODY" | awk '{print $2}')
           
           if [ -z "$VERSION" ]; then
-            echo "Error: Version is missing. Please use '/start v1.2.3'"
             gh issue comment $ISSUE_NUMBER --body "❌ 버전을 입력해주세요. (예: /start v1.2.3)"
             exit 1
           fi
 
-          echo "Detected Version: $VERSION"
-          
-          # 2. 추출된 버전을 환경 변수에 저장 (이후 Step에서 사용 가능)
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-
-          # 3. GitHub CLI를 사용하여 이슈에 댓글 남기기
-          gh issue comment $ISSUE_NUMBER --body "🚀 **Release $VERSION** 워크플로우를 시작합니다! 작업이 완료되면 알림을 드릴게요."
-
-      - name: Run Release logic
-        run: |
-          echo "Processing release for ${{ env.RELEASE_VERSION }}..."
-          # 여기에 실제 배포 스크립트(Fastlane, Build 등)를 작성하세요.
+          gh issue comment $ISSUE_NUMBER --body "🚀 **Release $VERSION**을 시작합니다."
+          # 이후 배포 로직 실행...
