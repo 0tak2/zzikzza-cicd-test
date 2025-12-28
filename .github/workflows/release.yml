@@ -81,24 +81,24 @@ jobs:
           
           # 3-1. 기존 [Unreleased] 헤더를 현재 버전으로 교체
           sed -i "s/.*## \[Unreleased\]/## [$STRIP_VER] - $TODAY/" CHANGELOG.md
-
-          # 3-2. 새로운 [Unreleased] 템플릿 삽입
-          # '수행한다.' 문구 바로 뒤에 줄바꿈과 함께 템플릿을 추가합니다.
-          UNRELEASED_BLOCK="\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security"
           
-          # sed의 a(append) 명령어를 쓰되, printf를 통해 이스케이프된 문자열을 전달합니다.
-          sed -i "/기준으로 수행한다\./a $(printf "$UNRELEASED_BLOCK")" CHANGELOG.md
-
+          # 3-2. 새로운 [Unreleased] 템플릿 삽입
+          printf "\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n" > unreleased_tmp.txt
+          
+          # 'r' 명령어를 통해 지정한 위치 '뒤'에 파일 내용을 읽어온다
+          sed -i "/기준으로 수행한다\./r unreleased_tmp.txt" CHANGELOG.md
+          rm unreleased_tmp.txt
+          
           # 3-3. 하단 링크 섹션 업데이트
           NEW_DIFF_LINK="[$STRIP_VER]: $REPO_URL/compare/$LAST_VERSION_TAG...$RAW_VER"
           NEW_UNRELEASED_LINK="[Unreleased]: $REPO_URL/compare/$RAW_VER...HEAD"
-        
+          
           # 기존 [Unreleased] 링크 삭제 (중복 방지)
           sed -i "/^\[Unreleased\]:/d" CHANGELOG.md
           
-          # 첫 번째 링크 라인을 찾아 그 위에 Unreleased와 새 버전 링크를 순서대로 삽입
-          # \n을 printf로 미리 처리하여 sed에 전달합니다.
-          sed -i "0,/^\[.*\]:/{s|^\[.*\]:|$(printf "$NEW_UNRELEASED_LINK\n$NEW_DIFF_LINK")\n&|}" CHANGELOG.md
+          # 링크 추가
+          sed -i "0,/^\[.*\]:/{s|^\[.*\]:|$NEW_DIFF_LINK\n&|}" CHANGELOG.md
+          sed -i "0,/^\[.*\]:/{s|^\[.*\]:|$NEW_UNRELEASED_LINK\n&|}" CHANGELOG.md
 
           git add CHANGELOG.md
           git commit -m "[Docs] release: $RAW_VER CHANGELOG.md"
