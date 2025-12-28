@@ -50,9 +50,9 @@ jobs:
           git checkout -b $RELEASE_BRANCH
 
           # 2. 빌드 넘버 증가 (+1)
-          OLD_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION =" *.xcodeproj/project.pbxproj | sed -E 's/.*=[[:space:]]*([0-9]+);/\1/')
+          OLD_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION =" QueenCam/QueenCam.xcodeproj/project.pbxproj | sed -E 's/.*=[[:space:]]*([0-9]+);/\1/')
           NEW_BUILD_NUMBER=$((OLD_BUILD_NUMBER + 1))
-          sed -i "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER;/g" *.xcodeproj/project.pbxproj
+          sed -i "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER;/g" QueenCam/QueenCam.xcodeproj/project.pbxproj
           
           git add .
           git commit -m "[Chore] release: 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
