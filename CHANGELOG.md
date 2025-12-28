@@ -453,7 +453,8 @@
 - Wi-Fi Aware 연결 후, 라이브 포토 촬영 시 앱이 크래시되는 문제
 - 레퍼런스 삭제 후 재등록에 관한 상태 초기화 문제
 
-[1.2.10]: https://github.com/0tak2/zzikzza-cicd-test/compare/.../1.2.10
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.2.10...HEAD
+[1.2.10]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.9...1.2.10
 [1.2.8]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.8...1.2.9
 [1.2.8]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.7...1.2.8
 [1.1.2]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/compare/v1.1.1...v1.1.2
@@ -469,4 +470,3 @@
 [0.2.0]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/releases/tag/v0.0.1
-[Unreleased]: hhttps://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim
