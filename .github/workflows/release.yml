@@ -54,15 +54,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RAW_VER=${{ env.RAW_VERSION }}      # 예: v1.3.0
-          STRIP_VER=${{ env.STRIPPED_VERSION }} # 예: 1.3.0
+          RAW_VER=${{ env.RAW_VERSION }}
+          STRIP_VER=${{ env.STRIPPED_VERSION }}
           RELEASE_BRANCH="release/$RAW_VER"
           XCODE_PROJ_PATH="QueenCam/QueenCam.xcodeproj/project.pbxproj"
           TODAY=$(date +'%Y-%m-%d')
           REPO_URL="https://github.com/${{ github.repository }}"
 
-          # 1. 이전 버전 추출 (아직 수정 전인 CHANGELOG에서 ## [x.y.z] 첫 번째 항목)
-          # 태그 비교를 위해 'v'를 붙여 관리합니다.
+          # 1. 이전 버전 추출
           LAST_VERSION_STRIP=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
           LAST_VERSION_TAG="v$LAST_VERSION_STRIP"
 
@@ -79,23 +78,27 @@ jobs:
           git commit -m "[Chore] release: $RAW_VER 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
 
           # 3. CHANGELOG 업데이트 시작
-          # 3-1. 기존 [Unreleased] 섹션 헤더를 현재 버전과 날짜로 변경
-          sed -i "s/## \[Unreleased\]/## [$STRIP_VER] - $TODAY/" CHANGELOG.md
-
-          # 3-2. 서문(기준으로 수행한다.) 바로 아래에 새로운 [Unreleased] 템플릿 삽입
-          # '수행한다.' 문구가 있는 라인 뒤(a)에 내용을 추가합니다.
-          UNRELEASE_TEMPLATE="\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security"
-          sed -i "/기준으로 수행한다\./a $UNRELEASE_TEMPLATE" CHANGELOG.md
-
+          
+          # 3-1. 기존 [Unreleased] 헤더를 현재 버전으로 교체
+          sed -i "s/.*## \[Unreleased\]/## [$STRIP_VER] - $TODAY/" CHANGELOG.md
+          
+          # 3-2. 새로운 [Unreleased] 템플릿 삽입
+          printf "\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n" > unreleased_tmp.txt
+          
+          # 'r' 명령어를 통해 지정한 위치 '뒤'에 파일 내용을 읽어온다
+          sed -i "/기준으로 수행한다\./r unreleased_tmp.txt" CHANGELOG.md
+          rm unreleased_tmp.txt
+          
           # 3-3. 하단 링크 섹션 업데이트
-          # [Unreleased] 비교 링크는 '현재버전...HEAD'로 갱신
-          sed -i "s|^\[Unreleased\]:.*|[Unreleased]: $REPO_URL/compare/$RAW_VER...HEAD|" CHANGELOG.md
-        
-          # 이번 릴리즈에 대한 diff 링크 생성
           NEW_DIFF_LINK="[$STRIP_VER]: $REPO_URL/compare/$LAST_VERSION_TAG...$RAW_VER"
-        
-          # 구분자를 | 로 변경하여 URL 내부의 / 와 충돌 방지
+          NEW_UNRELEASED_LINK="[Unreleased]: $REPO_URL/compare/$RAW_VER...HEAD"
+          
+          # 기존 [Unreleased] 링크 삭제 (중복 방지)
+          sed -i "/^\[Unreleased\]:/d" CHANGELOG.md
+          
+          # 링크 추가
           sed -i "0,/^\[.*\]:/{s|^\[.*\]:|$NEW_DIFF_LINK\n&|}" CHANGELOG.md
+          sed -i "0,/^\[.*\]:/{s|^\[.*\]:|$NEW_UNRELEASED_LINK\n&|}" CHANGELOG.md
 
           git add CHANGELOG.md
           git commit -m "[Docs] release: $RAW_VER CHANGELOG.md"

@@ -4,11 +4,31 @@
 
 이 문서의 형식은 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)를 따르고,
 이 프로젝트의 버저닝은 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)를 기준으로 수행한다.
-n## [Unreleased]
+
+## [Unreleased]
 
 ### Added
 
 ### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [1.2.13] - 2025-12-28
+
+### Added
+
+- abc
+
+### Changed
+
+- def
+- ghi
 
 ### Deprecated
 
@@ -466,8 +486,9 @@ n## [Unreleased]
 - Wi-Fi Aware 연결 후, 라이브 포토 촬영 시 앱이 크래시되는 문제
 - 레퍼런스 삭제 후 재등록에 관한 상태 초기화 문제
 
+[Unreleased]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.13...HEAD
+[1.2.13]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.12...v1.2.13
 [1.2.12]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.10...v1.2.12
-[Unreleased]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.12...HEAD
 [1.2.10]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.9...1.2.10
 [1.2.8]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.8...1.2.9
 [1.2.8]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.7...1.2.8
