@@ -5,7 +5,7 @@
 이 문서의 형식은 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)를 따르고,
 이 프로젝트의 버저닝은 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)를 기준으로 수행한다.
 
-## [unreleased]
+## [Unreleased]
 
 ### Added
 
@@ -392,4 +392,4 @@
 [0.2.0]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim/releases/tag/v0.0.1
-[unreleased]: hhttps://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim
+[Unreleased]: hhttps://github.com/DeveloperAcademy-POSTECH/2025-C6-A11-QueendomJaerim
