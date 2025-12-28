@@ -35,6 +35,8 @@ jobs:
           echo "RAW_VERSION=$RAW_VERSION" >> $GITHUB_ENV
           echo "STRIPPED_VERSION=$STRIPPED_VERSION" >> $GITHUB_ENV
 
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 시작되었습니다. ($RAW_VERSION)**"
+
       - name: Git Config Setup
         run: |
           git config user.name "github-actions[bot]"
@@ -94,5 +96,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RAW_VER=${{ env.RAW_VERSION }}
-          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 성공적으로 완료되었습니다! ($RAW_VER)**
+          RAW_VERSION=${{ env.RAW_VERSION }}
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 성공적으로 완료되었습니다! ($RAW_VERSION)**"
