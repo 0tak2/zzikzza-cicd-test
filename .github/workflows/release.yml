@@ -61,10 +61,17 @@ jobs:
           TODAY=$(date +'%Y-%m-%d')
           REPO_URL="https://github.com/${{ github.repository }}"
 
-          # 1. 이전 버전 추출 (아직 수정 전인 CHANGELOG에서 ## [x.y.z] 첫 번째 항목)
-          # 태그 비교를 위해 'v'를 붙여 관리합니다.
-          LAST_VERSION_STRIP=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-          LAST_VERSION_TAG="v$LAST_VERSION_STRIP"
+          # 1. 이전 버전 추출 (Unreleased를 제외한 첫 번째 숫자 버전 ## [x.y.z])
+          # grep으로 모든 버전을 찾은 뒤, head -n 1로 가장 최신(위쪽) 버전을 가져옵니다.
+          PREV_VER=$(grep -oE '## \[[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md | head -n 1 | tr -d '[]# ')
+          
+          # 만약 이전 버전이 없다면 (최초 릴리즈 시) 태그 비교 대신 현재 버전만 표시되도록 예외 처리
+          if [ -z "$PREV_VER" ]; then
+            DIFF_RANGE="$RAW_VER"
+          else
+            # 기존 태그 관습에 따라 v를 붙여 비교 (v1.2.9...v1.2.10)
+            DIFF_RANGE="v$PREV_VER...$RAW_VER"
+          fi
 
           git checkout develop
           git checkout -b $RELEASE_BRANCH
@@ -78,24 +85,21 @@ jobs:
           git add .
           git commit -m "[Chore] release: $RAW_VER 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
 
-          # 3. CHANGELOG 업데이트 시작
-          # 3-1. 기존 [Unreleased] 섹션 헤더를 현재 버전과 날짜로 변경
+          # 3. CHANGELOG 업데이트
+          # 3-1. [Unreleased]를 현재 버전으로 변경
           sed -i "s/## \[Unreleased\]/## [$STRIP_VER] - $TODAY/" CHANGELOG.md
 
-          # 3-2. 서문(기준으로 수행한다.) 바로 아래에 새로운 [Unreleased] 템플릿 삽입
-          # '수행한다.' 문구가 있는 라인 뒤(a)에 내용을 추가합니다.
+          # 3-2. 서문 아래에 새로운 [Unreleased] 섹션 추가
           UNRELEASE_TEMPLATE="\n## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security"
           sed -i "/기준으로 수행한다\./a $UNRELEASE_TEMPLATE" CHANGELOG.md
 
           # 3-3. 하단 링크 섹션 업데이트
-          # [Unreleased] 비교 링크는 '현재버전...HEAD'로 갱신 (맨 아래에 있는 경우 대응)
+          # Unreleased 링크를 새 버전...HEAD 로 갱신
           sed -i "s|^\[Unreleased\]:.*|[Unreleased]: $REPO_URL/compare/$RAW_VER...HEAD|" CHANGELOG.md
           
-          # 이번 릴리즈에 대한 diff 링크 생성
-          NEW_DIFF_LINK="[$STRIP_VER]: $REPO_URL/compare/$LAST_VERSION_TAG...$RAW_VER"
-          
-          # 파일에서 처음으로 '['로 시작하는 링크가 등장하는 줄 바로 위에 새 링크 삽입
-          # 0,/pattern/ 은 파일의 첫 번째 매칭 지점까지만 범위를 제한합니다.
+          # 새 버전의 diff 링크를 링크 섹션의 첫 번째 라인에 삽입
+          NEW_DIFF_LINK="[$STRIP_VER]: $REPO_URL/compare/$DIFF_RANGE"
+          # 첫 번째 '['로 시작하는 링크 라인 바로 위에 추가
           sed -i "0,/^\[.*\]:/{s/^\[.*\]:/$NEW_DIFF_LINK\n&/}" CHANGELOG.md
 
           git add CHANGELOG.md
