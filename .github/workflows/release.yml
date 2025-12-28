@@ -74,7 +74,25 @@ jobs:
 
           # CHANGELOG.md 업데이트
           TODAY=$(date +'%Y-%m-%d')
-          sed -i "s/## \[Unreleased\]/## [$RAW_VER] - $TODAY/g" CHANGELOG.md
+
+          # 1. 기존 [Unreleased] → 현재 버전
+          sed -i "s/## \\[Unreleased\\]/## [$RAW_VER] - $TODAY/g" CHANGELOG.md
+
+          # 2. 새로운 [Unreleased] 섹션을 최상단에 추가
+          awk '
+          BEGIN {
+            print "## [Unreleased]\n"
+            print "### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n"
+          }
+          { print }
+          ' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
+
+          # 3. 하단에 diff 링크 추가
+          LAST_VERSION=$(grep -oE '^## \\[[^]]+\\]' CHANGELOG.md | sed -n '3p' | tr -d '[]')
+
+          echo "" >> CHANGELOG.md
+          echo "[$RAW_VER]: https://github.com/${{ github.repository }}/compare/$LAST_VERSION...$RAW_VER" >> CHANGELOG.md
+
           git add CHANGELOG.md
           git commit -m "[Docs] release: $RAW_VER CHANGELOG.md"
 
