@@ -25,15 +25,25 @@ jobs:
 
       - name: Parse Version
         id: parse_version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # 1. 버전 파싱
           RAW_VERSION=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
+          
+          # 2. 버전 누락 체크
           if [ -z "$RAW_VERSION" ]; then
             echo "VERSION_MISSING=true" >> $GITHUB_ENV
             exit 1
           fi
+          
+          # 3. 환경 변수 설정
           STRIPPED_VERSION=$(echo $RAW_VERSION | sed 's/^v//')
           echo "RAW_VERSION=$RAW_VERSION" >> $GITHUB_ENV
           echo "STRIPPED_VERSION=$STRIPPED_VERSION" >> $GITHUB_ENV
+
+          # 4. 시작 코멘트 남기기 (버전이 있을 때만 실행됨)
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 시작되었습니다. ($RAW_VERSION)**"
 
       - name: Git Config Setup
         run: |
@@ -49,11 +59,10 @@ jobs:
           RELEASE_BRANCH="release/$RAW_VER"
           XCODE_PROJ_PATH="QueenCam/QueenCam.xcodeproj/project.pbxproj"
 
-          # 1. develop에서 시작하여 릴리즈 브랜치 생성
           git checkout develop
           git checkout -b $RELEASE_BRANCH
 
-          # 2. Marketing Version 및 Build Number 업데이트
+          # Marketing Version 및 Build Number 업데이트
           sed -i "s/MARKETING_VERSION = .*/MARKETING_VERSION = $STRIP_VER;/g" $XCODE_PROJ_PATH
           
           OLD_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION =" $XCODE_PROJ_PATH | sed -E 's/.*=[[:space:]]*([0-9]+);/\1/')
@@ -63,36 +72,46 @@ jobs:
           git add .
           git commit -m "[Chore] release: v$STRIP_VER 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
 
-          # 3. CHANGELOG.md 업데이트
+          # CHANGELOG.md 업데이트
           TODAY=$(date +'%Y-%m-%d')
           sed -i "s/## \[Unreleased\]/## [$RAW_VER] - $TODAY/g" CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "[Docs] release: $RAW_VER CHANGELOG.md"
 
-          # 4. 🔥 릴리즈 브랜치를 리모트에 푸시
+          # 릴리즈 브랜치 푸시
           git push origin $RELEASE_BRANCH
 
-          # --- 직접 병합 및 태깅 ---
-
-          # 5. main 브랜치에 병합 및 태그 생성
+          # main 병합 및 태깅
           git checkout main
           git merge --no-ff $RELEASE_BRANCH -m "Merge release branch $RELEASE_BRANCH into main"
           git tag -a "$RAW_VER" -m "Release $RAW_VER"
 
-          # 6. develop 브랜치에 백머지
+          # develop 백머지
           git checkout develop
           git merge --no-ff $RELEASE_BRANCH -m "Merge release branch $RELEASE_BRANCH back to develop"
 
-          # 7. main, develop 브랜치와 태그 푸시
+          # 푸시 및 정리
           git push origin main develop --tags
-
-          # 8. 로컬 작업용 브랜치 삭제
           git branch -d $RELEASE_BRANCH
+
+      - name: Post Failure Comment
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ env.VERSION_MISSING }}" == "true" ]; then
+            gh issue comment ${{ github.event.issue.number }} --body "❌ **버전을 입력하지 않았습니다.** \`/start v1.2.3\` 과 같은 형식으로 입력해 주세요."
+          else
+            gh issue comment ${{ github.event.issue.number }} --body "❌ **릴리즈 작업 도중 오류가 발생했습니다. (${{ env.RAW_VERSION }})**
+            
+            Actions 탭에서 상세 로그를 확인해 주세요."
+          fi
 
       - name: Post Success Comment
         if: success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          RAW_VER=${{ env.RAW_VERSION }}
-          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 성공적으로 완료되었습니다! ($RAW_VER)**
+          gh issue comment ${{ github.event.issue.number }} --body "✅ **릴리즈 작업이 성공적으로 완료되었습니다! (${{ env.RAW_VERSION }})**
+          
+          - **App Version:** ${{ env.STRIPPED_VERSION }}"
