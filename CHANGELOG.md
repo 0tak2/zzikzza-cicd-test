@@ -5,7 +5,7 @@
 이 문서의 형식은 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)를 따르고,
 이 프로젝트의 버저닝은 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)를 기준으로 수행한다.
 
-## [Unreleased]
+## [v1.2.7] - 2025-12-28
 
 ### Added
 
