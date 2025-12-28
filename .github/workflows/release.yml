@@ -23,7 +23,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Parse Version
+      - name: Parse Version and post comment
+        env:
+          GH_TOKEN: ${{ github.token }}
         id: parse_version
         run: |
           RAW_VERSION=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
