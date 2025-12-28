@@ -72,26 +72,50 @@ jobs:
           git add .
           git commit -m "[Chore] release: v$STRIP_VER 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
 
+          # =========================
           # CHANGELOG.md 업데이트
+          # =========================
           TODAY=$(date +'%Y-%m-%d')
 
-          # 1. 기존 [Unreleased] → 현재 버전
-          sed -i "s/## \\[Unreleased\\]/## [$RAW_VER] - $TODAY/g" CHANGELOG.md
+          # 1. 기존 [Unreleased] → 현재 버전 + 날짜
+          sed -i "s/## \\[Unreleased\\]/## [$STRIP_VER] - $TODAY/g" CHANGELOG.md
 
-          # 2. 새로운 [Unreleased] 섹션을 최상단에 추가
+          # 2. 서문 아래에 새로운 [Unreleased] 섹션 삽입
           awk '
           BEGIN {
-            print "## [Unreleased]\n"
-            print "### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n"
+            unreleased = "## [Unreleased]\n\n### Added\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n"
           }
-          { print }
+          {
+            print
+            if ($0 ~ /^이 프로젝트의 버저닝은/ && !inserted) {
+              print ""
+              print unreleased
+              inserted = 1
+            }
+          }
           ' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
 
-          # 3. 하단에 diff 링크 추가
+          # 3. 이전 버전 계산 (Unreleased, 현재 버전 제외)
           LAST_VERSION=$(grep -oE '^## \\[[^]]+\\]' CHANGELOG.md | sed -n '3p' | tr -d '[]')
 
-          echo "" >> CHANGELOG.md
-          echo "[$RAW_VER]: https://github.com/${{ github.repository }}/compare/$LAST_VERSION...$RAW_VER" >> CHANGELOG.md
+          # 4. diff 링크를 최신 버전 위에 삽입
+          awk -v raw="$STRIP_VER" -v last="$LAST_VERSION" -v repo="${{ github.repository }}" '
+          BEGIN {
+            newLink = "[" raw "]: https://github.com/" repo "/compare/" last ".../" raw
+          }
+          {
+            if (!inserted && $0 ~ /^\[[^]]+\]: https:\/\/github.com\//) {
+              print newLink
+              inserted = 1
+            }
+            print
+          }
+          END {
+            if (!inserted) {
+              print newLink
+            }
+          }
+          ' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
 
           git add CHANGELOG.md
           git commit -m "[Docs] release: $RAW_VER CHANGELOG.md"
