@@ -94,8 +94,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "🚀 **배포 자동화 작업이 성공적으로 완료되었습니다!**
-          
-          - **브랜치 푸시:** \`release/${{ env.RAW_VERSION }}\` 가 원격에 생성되었습니다.
-          - **병합 완료:** \`main\` 및 \`develop\`에 반영되었습니다.
-          - **태그 생성:** \`${{ env.RAW_VERSION }}\` 태그가 푸시되었습니다.
+          RAW_VER=${{ env.RAW_VERSION }}
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **릴리즈 작업이 성공적으로 완료되었습니다! ($RAW_VER)**
