@@ -9,15 +9,18 @@
 
 ### Added
 
+- some features
 
 ### Changed
 
+- some changed
 
 ### Deprecated
 
 
 ### Removed
 
+- something removed
 
 ### Fixed
 
