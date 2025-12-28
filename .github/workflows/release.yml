@@ -6,8 +6,6 @@ on:
 
 jobs:
   release:
-    # 1. PR이 아니고, 제목이 지정된 형식이며, 코멘트가 '/start'로 시작하고,
-    # 2. 작성자가 저장소 소유자(OWNER) 또는 협력자(COLLABORATOR, MEMBER)인 경우에만 실행
     if: |
       !github.event.issue.pull_request && 
       startsWith(github.event.issue.title, '🎤 [Release]') &&
@@ -16,25 +14,87 @@ jobs:
     
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       issues: write
-      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Parse and Run
-        env:
-          GH_TOKEN: ${{ github.token }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
+      - name: Parse Version
+        id: parse_version
         run: |
-          VERSION=$(echo "$COMMENT_BODY" | awk '{print $2}')
-          
+          VERSION=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
           if [ -z "$VERSION" ]; then
-            gh issue comment $ISSUE_NUMBER --body "❌ 버전을 입력해주세요. (예: /start v1.2.3)"
+            echo "VERSION_MISSING=true" >> $GITHUB_ENV
             exit 1
           fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-          gh issue comment $ISSUE_NUMBER --body "🚀 **Release $VERSION**을 시작합니다."
-          # 이후 배포 로직 실행...
+      - name: Git Config Setup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Process Release and Direct Merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ env.VERSION }}
+          RELEASE_BRANCH="release/$VERSION"
+
+          # 1. develop에서 시작하여 릴리즈 브랜치 생성
+          git checkout develop
+          git checkout -b $RELEASE_BRANCH
+
+          # 2. 빌드 넘버 증가 (+1)
+          OLD_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION =" *.xcodeproj/project.pbxproj | sed -E 's/.*=[[:space:]]*([0-9]+);/\1/')
+          NEW_BUILD_NUMBER=$((OLD_BUILD_NUMBER + 1))
+          sed -i "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER;/g" *.xcodeproj/project.pbxproj
+          
+          git add .
+          git commit -m "[Chore] release: 빌드 넘버 증가 ($NEW_BUILD_NUMBER)"
+
+          # 3. CHANGELOG.md 업데이트
+          TODAY=$(date +'%Y-%m-%d')
+          sed -i "s/## \[Unreleased\]/## [$VERSION] - $TODAY/g" CHANGELOG.md
+          
+          git add CHANGELOG.md
+          git commit -m "[Docs] release: $VERSION CHANGELOG.md"
+
+          # --- 직접 병합 시작 ---
+
+          # 4. main 브랜치에 병합 및 태그 생성
+          git checkout main
+          git merge --no-ff $RELEASE_BRANCH -m "Merge release branch $RELEASE_BRANCH into main"
+          git tag -a "$VERSION" -m "Release $VERSION"
+
+          # 5. develop 브랜치에 백머지 (빌드 넘버/로그 반영)
+          git checkout develop
+          git merge --no-ff $RELEASE_BRANCH -m "Merge release branch $RELEASE_BRANCH back to develop"
+
+          # 6. 모든 변경사항 한 번에 푸시
+          # main, develop 브랜치와 생성된 태그를 모두 푸시합니다.
+          git push origin main develop --tags
+
+      - name: Post Success Comment
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "🚀 **배포 준비 작업이 완료되었습니다!**
+          
+          - **버전:** \`${{ env.VERSION }}\`
+          - **태그 생성:** \`${{ env.VERSION }}\` 태그가 푸시되었습니다.
+          
+          이제 Xcode에서 해당 태그 혹은 main 브랜치를 기준으로 아카이빙 및 배포를 진행해 주세요."
+
+      - name: Post Failure Comment
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MSG="❌ 작업 중 오류가 발생했습니다. 브랜치 충돌이나 권한 설정을 확인해 주세요."
+          gh issue comment ${{ github.event.issue.number }} --body "$MSG"
