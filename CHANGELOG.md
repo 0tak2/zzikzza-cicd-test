@@ -19,6 +19,20 @@
 
 ### Security
 
+## [1.2.14] - 2026-01-03
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
 ## [1.2.13] - 2025-12-28
 
 ### Added
@@ -486,7 +500,8 @@
 - Wi-Fi Aware 연결 후, 라이브 포토 촬영 시 앱이 크래시되는 문제
 - 레퍼런스 삭제 후 재등록에 관한 상태 초기화 문제
 
-[Unreleased]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.13...HEAD
+[Unreleased]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.14...HEAD
+[1.2.14]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.13...v1.2.14
 [1.2.13]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.12...v1.2.13
 [1.2.12]: https://github.com/0tak2/zzikzza-cicd-test/compare/v1.2.10...v1.2.12
 [1.2.10]: https://github.com/0tak2/zzikzza-cicd-test/compare/1.2.9...1.2.10
