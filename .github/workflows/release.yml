@@ -21,6 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ssh-key: ${{ secrets.DEPLOY_KEY_SECRET }}
           fetch-depth: 0
 
       - name: Parse Version
@@ -49,11 +50,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      
-      - name: Set Deploy Key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY_SECRET }}
 
       - name: Process Release and Direct Merge
         env:
